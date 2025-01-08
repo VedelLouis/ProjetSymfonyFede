@@ -5,84 +5,140 @@ namespace App\Controller;
 use App\Entity\Contact;
 use App\Form\ContactType;
 use App\Repository\ContactRepository;
+use Doctrine\ORM\EntityManagerInterface;  // Importation du EntityManagerInterface
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class ContactController extends AbstractController
 {
-    // Liste des contacts
-    #[Route('/contacts', name: 'contact_list')]
+    private $entityManager;
+
+    // Injection du EntityManagerInterface dans le constructeur
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
+
+    #[Route('/', name: 'contact_list')]
     public function listContacts(ContactRepository $contactRepository): Response
     {
-        // Récupère tous les contacts
         $contacts = $contactRepository->findAll();
-
-        // Affiche la vue Twig avec les contacts
         return $this->render('contact/list.html.twig', [
             'contacts' => $contacts,
         ]);
     }
 
-    // Créer un contact
-    #[Route('/contact/create', name: 'contact_create')]
-    public function createContact(Request $request, EntityManagerInterface $em): Response
+    #[Route('/add_contact', name: 'contact_add')]
+    public function addContact(Request $request, SluggerInterface $slugger): Response
     {
         $contact = new Contact();
-
-        // Création du formulaire de contact
         $form = $this->createForm(ContactType::class, $contact);
         $form->handleRequest($request);
 
-        // Si le formulaire est soumis et valide
         if ($form->isSubmitted() && $form->isValid()) {
-            $em->persist($contact);
-            $em->flush();
+            $imageFile = $form->get('image')->getData();
 
-            // Redirige vers la liste des contacts
+            if ($imageFile) {
+                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+
+                try {
+                    $imageFile->move(
+                        $this->getParameter('contact_images_directory'),
+                        $newFilename
+                    );
+                    $contact->setImage($newFilename);
+                } catch (\Exception $e) {
+                    $this->addFlash('error', 'Erreur lors de l\'upload de l\'image.');
+                }
+            }
+
+            $this->entityManager->persist($contact);
+            $this->entityManager->flush();
+
             return $this->redirectToRoute('contact_list');
         }
 
-        // Affiche la vue Twig avec le formulaire
-        return $this->render('contact/create.html.twig', [
+        return $this->render('contact/add.html.twig', [
             'form' => $form->createView(),
         ]);
     }
 
-    // Modifier un contact
-    #[Route('/contact/{id}/edit', name: 'contact_edit')]
-    public function editContact(Request $request, Contact $contact, EntityManagerInterface $em): Response
+    #[Route('/contact/edit/{id}', name: 'contact_edit')]
+    public function editContact(int $id, Request $request, SluggerInterface $slugger, ContactRepository $contactRepository): Response
     {
-        // Création du formulaire de contact
-        $form = $this->createForm(ContactType::class, $contact);
-        $form->handleRequest($request);
+        $contact = $contactRepository->find($id);
 
-        // Si le formulaire est soumis et valide
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em->flush();
-
-            // Redirige vers la liste des contacts
+        if (!$contact) {
+            $this->addFlash('error', 'Contact non trouvé.');
             return $this->redirectToRoute('contact_list');
         }
 
-        // Affiche la vue Twig avec le formulaire
+        $form = $this->createForm(ContactType::class, $contact);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('image')->getData();
+
+            if ($imageFile) {
+                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+
+                try {
+                    $imageFile->move(
+                        $this->getParameter('contact_images_directory'),
+                        $newFilename
+                    );
+
+                    $oldImagePath = $this->getParameter('kernel.project_dir') . '/public/ContactImages/' . $contact->getImage();
+                    if ($contact->getImage() && file_exists($oldImagePath)) {
+                        unlink($oldImagePath);
+                    }
+
+                    $contact->setImage($newFilename);
+                } catch (\Exception $e) {
+                    $this->addFlash('error', 'Erreur lors de l\'upload de l\'image.');
+                }
+            }
+
+            $this->entityManager->flush();
+
+            $this->addFlash('success', 'Contact mis à jour avec succès.');
+            return $this->redirectToRoute('contact_list');
+        }
+
         return $this->render('contact/edit.html.twig', [
             'form' => $form->createView(),
             'contact' => $contact,
         ]);
     }
 
-    // Supprimer un contact
-    #[Route('/contact/{id}/delete', name: 'contact_delete')]
-    public function deleteContact(Contact $contact, EntityManagerInterface $em): Response
+    #[Route('/contact/delete/{id}', name: 'contact_delete', methods: ['GET'])]
+    public function deleteContact(int $id, ContactRepository $contactRepository, EntityManagerInterface $entityManager): Response
     {
-        // Supprime le contact
-        $em->remove($contact);
-        $em->flush();
+        $contact = $contactRepository->find($id);
 
-        // Redirige vers la liste des contacts
+        if (!$contact) {
+            $this->addFlash('error', 'Contact non trouvé.');
+            return $this->redirectToRoute('contact_list');
+        }
+
+        $imagePath = $this->getParameter('kernel.project_dir') . '/public/ContactImages/' . $contact->getImage();
+        if ($contact->getImage() && file_exists($imagePath)) {
+            unlink($imagePath);
+        }
+
+        $entityManager->remove($contact);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Contact supprimé avec succès.');
+
         return $this->redirectToRoute('contact_list');
     }
+
 }

@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier un contact{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Modifier le contact</h1>
+
+        {{ form_start(form, {'enctype': 'multipart/form-data'}) }}
+
+        <div class="mb-3">
+            {% if contact.image %}
+                <img src="{{ asset('ContactImages/' ~ contact.image) }}" alt="Image de {{ contact.firstName }}" class="img-thumbnail">
+            {% else %}
+                <img src="{{ asset('assets/default.png') }}" alt="Image de {{ contact.firstName }}" class="img-thumbnail">
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <div class="mb-1">
+                {{ form_label(form.firstName) }}
+            </div>
+            {{ form_widget(form.firstName, { 'attr': {'class': 'form-control'} }) }}
+            {{ form_errors(form.firstName) }}
+        </div>
+
+        <div class="mb-3">
+            <div class="mb-1">
+                {{ form_label(form.lastName) }}
+            </div>
+            {{ form_widget(form.lastName, { 'attr': {'class': 'form-control'} }) }}
+            {{ form_errors(form.lastName) }}
+        </div>
+
+        <div class="mb-3">
+            <div class="mb-1">
+                {{ form_label(form.phoneNumber) }}
+            </div>
+            {{ form_widget(form.phoneNumber, { 'attr': {'class': 'form-control'} }) }}
+            {{ form_errors(form.phoneNumber) }}
+        </div>
+
+        <div class="mb-3">
+            <div class="mb-1">
+                {{ form_label(form.email) }}
+            </div>
+            {{ form_widget(form.email, { 'attr': {'class': 'form-control'} }) }}
+            {{ form_errors(form.email) }}
+        </div>
+
+        <div class="mb-3">
+            <div class="mb-1">
+                {{ form_label(form.image) }}
+            </div>
+            {{ form_widget(form.image, { 'attr': {'class': 'form-control'} }) }}
+            {{ form_errors(form.image) }}
+        </div>
+
+        {{ form_row(form.save, {'attr': {'class': 'btn btn-primary btn-lg'}}) }}
+
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
