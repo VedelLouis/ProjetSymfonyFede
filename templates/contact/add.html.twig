@@ -58,7 +58,16 @@
             </div>
         </div>
 
-        {{ form_row(form.save, {'attr': {'class': 'btn btn-primary btn-lg'}}) }}
-        {{ form_end(form) }}
+        <div class="mb-3">
+            <h3>Champs personnalisés</h3>
+            {{ form_row(form.customFields) }}
+        </div>
+
+        <div class="mb-3">
+            <div class="d-flex justify-start align-items-center mt-3 mb-4">
+                <a href="{{ path('contact_list') }}" class="btn btn-secondary me-2">Retour à la liste</a>
+                {{ form_row(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
+            </div>
+        </div>
     </div>
 {% endblock %}

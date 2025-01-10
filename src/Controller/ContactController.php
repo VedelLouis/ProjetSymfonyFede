@@ -3,10 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Contact;
+use App\Entity\CustomField;
 use App\Form\ContactType;
 use App\Repository\ContactRepository;
 use Doctrine\ORM\EntityManagerInterface;  // Importation du EntityManagerInterface
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -16,7 +18,6 @@ class ContactController extends AbstractController
 {
     private $entityManager;
 
-    // Injection du EntityManagerInterface dans le constructeur
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
@@ -35,11 +36,24 @@ class ContactController extends AbstractController
     public function addContact(Request $request, SluggerInterface $slugger): Response
     {
         $contact = new Contact();
-        $form = $this->createForm(ContactType::class, $contact);
+        $form = $this->createForm(ContactType::class, $contact, [
+            'submit_label' => 'Ajouter le contact',
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
             $imageFile = $form->get('image')->getData();
+
+            $customFieldsData = $form->get('customFields')->getData();
+            foreach ($customFieldsData as $customFieldValue) {
+                $customField = new CustomField();
+                $customField->setValue($customFieldValue['value']);
+                $customField->setLabel($customFieldValue['label']);
+                $customField->setContact($contact);
+
+                $this->entityManager->persist($customField);
+            }
 
             if ($imageFile) {
                 $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
@@ -78,7 +92,9 @@ class ContactController extends AbstractController
             return $this->redirectToRoute('contact_list');
         }
 
-        $form = $this->createForm(ContactType::class, $contact);
+        $form = $this->createForm(ContactType::class, $contact, [
+            'submit_label' => 'Mettre à jour le contact',
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -139,6 +155,36 @@ class ContactController extends AbstractController
         $this->addFlash('success', 'Contact supprimé avec succès.');
 
         return $this->redirectToRoute('contact_list');
+    }
+
+    #[Route('/contacts/search', name: 'contact_search', methods: ['GET'])]
+    public function searchContacts(Request $request): JsonResponse
+    {
+        $searchTerm = $request->query->get('search', '');
+
+        $contacts = $this->entityManager->getRepository(Contact::class)
+            ->createQueryBuilder('c')
+            ->where('c.firstName LIKE :search')
+            ->orWhere('c.lastName LIKE :search')
+            ->orWhere('c.email LIKE :search')
+            ->orWhere('c.phoneNumber LIKE :search')
+            ->setParameter('search', '%' . $searchTerm . '%')
+            ->getQuery()
+            ->getResult();
+
+        $contactData = [];
+        foreach ($contacts as $contact) {
+            $contactData[] = [
+                'id' => $contact->getId(),
+                'firstName' => $contact->getFirstName(),
+                'lastName' => $contact->getLastName(),
+                'phoneNumber' => $contact->getPhoneNumber(),
+                'email' => $contact->getEmail(),
+                'image' => $contact->getImage(),
+            ];
+        }
+
+        return new JsonResponse($contactData);
     }
 
 }

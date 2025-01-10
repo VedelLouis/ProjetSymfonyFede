@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Contact;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -15,6 +16,7 @@ use Symfony\Component\Validator\Constraints\File;
 
 class ContactType extends AbstractType
 {
+    // ContactType.php
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
@@ -48,8 +50,15 @@ class ContactType extends AbstractType
                     ]),
                 ],
             ])
+            ->add('customFields', CollectionType::class, [
+                'entry_type' => CustomFieldType::class,
+                'entry_options' => ['label' => false],
+                'allow_add' => true,
+                'by_reference' => false,
+                'allow_delete' => true,
+            ])
             ->add('save', SubmitType::class, [
-                'label' => 'Ajouter le contact'
+                'label' => $options['submit_label'],
             ]);
     }
 
@@ -57,6 +66,7 @@ class ContactType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Contact::class,
+            'submit_label' => 'Ajouter le contact',
         ]);
     }
 }

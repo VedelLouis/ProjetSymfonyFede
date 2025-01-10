@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des groupes{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <div class="d-flex justify-start align-items-center container-title-add">
+            <h1 class="title-contacts m-0">Liste des groupes</h1>
+            <input type="text" id="search" class="form-control mx-3" placeholder="Rechercher un groupe ou un contact" oninput="searchGroups()">
+            <a href="" class="btn btn-success btn-lg">Ajouter un groupe</a>
+        </div>
+
+        {% if groups %}
+            <ul class="list-contact contact-list">
+                {% for group in groups %}
+                    <li class="list-group-item contact-item group-item border rounded-4 {% if loop.index is odd %}odd{% else %}even{% endif %}"
+                        onclick="toggleContacts(this)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="group-name">{{ group.name }}</strong>
+                            </div>
+                        </div>
+                        <span class="badge text-bg-secondary nbr-contact">{{ group.contacts|length }} contacts</span>
+                        <ul class="list-contact-group d-none">
+                            {% for contact in group.contacts %}
+                                <li class="d-flex align-items-center mb-2">
+                                    <img class="img-contact-group me-2"
+                                         src="{{ asset('ContactImages/' ~ contact.image) }}"
+                                         alt="Image de {{ contact.firstName }} {{ contact.lastName }}"
+                                         onerror="this.onerror=null;this.src='{{ asset('assets/default.png') }}';"
+                                         width="40" height="40">
+                                    <span class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                Aucun groupe trouvé.
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        let lastOpenedGroup = null;
+
+        function toggleContacts(groupElement) {
+            const contactList = groupElement.querySelector('.list-contact-group');
+            const contactBadge = groupElement.querySelector('.nbr-contact');
+
+            if (lastOpenedGroup && lastOpenedGroup !== groupElement) {
+                lastOpenedGroup.querySelector('.list-contact-group').classList.add('d-none');
+                lastOpenedGroup.querySelector('.nbr-contact').classList.remove('d-none');
+            }
+
+            contactList.classList.toggle('d-none');
+
+            if (contactList.classList.contains('d-none')) {
+                contactBadge.classList.remove('d-none');
+            } else {
+                contactBadge.classList.add('d-none');
+            }
+
+            lastOpenedGroup = groupElement;
+        }
+
+        function searchGroups() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const groupItems = document.querySelectorAll('.group-item');
+
+            groupItems.forEach(item => {
+                const groupName = item.querySelector('.group-name').textContent.toLowerCase();
+                const contactNames = Array.from(item.querySelectorAll('.contact-name'))
+                    .map(contact => contact.textContent.toLowerCase())
+                    .join(' ');
+
+                if (
+                    groupName.includes(searchTerm) ||
+                    contactNames.includes(searchTerm)
+                ) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+{% endblock %}

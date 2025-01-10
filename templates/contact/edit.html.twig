@@ -55,9 +55,11 @@
             {{ form_widget(form.image, { 'attr': {'class': 'form-control'} }) }}
             {{ form_errors(form.image) }}
         </div>
-
-        {{ form_row(form.save, {'attr': {'class': 'btn btn-primary btn-lg'}}) }}
-
-        {{ form_end(form) }}
+        <div class="mb-3">
+            <div class="d-flex justify-start align-items-center mt-3 mb-4">
+                <a href="{{ path('contact_list') }}" class="btn btn-secondary me-2">Retour à la liste</a>
+                {{ form_row(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
+            </div>
+        </div>
     </div>
 {% endblock %}
