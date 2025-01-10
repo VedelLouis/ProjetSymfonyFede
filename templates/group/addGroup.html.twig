@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter un groupe{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Ajouter un groupe</h1>
+
+        {{ form_start(form, {'enctype': 'multipart/form-data', 'attr': {'id': 'groupForm'}}) }}
+
+        <div class="mb-3">
+            <div class="mb-1">
+                {{ form_label(form.name) }}
+            </div>
+            {{ form_widget(form.name, { 'attr': {'class': 'form-control'} }) }}
+            <div class="form-error">
+                {{ form_errors(form.name) }}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="mb-1">
+                {{ form_label(form.contacts) }}
+            </div>
+            <div class="form-control">
+                {% for choice in form.contacts %}
+                    {{ form_widget(choice, {'attr': {'class': 'btn-check', 'id': choice.vars.id}}) }}
+                    <label class="btn btn-outline-secondary" for="{{ choice.vars.id }}">
+                        {{ choice.vars.label }}
+                    </label>
+                {% endfor %}
+            </div>
+            <div class="form-error">
+                {{ form_errors(form.contacts) }}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="d-flex justify-start align-items-center mt-3 mb-4">
+                <a href="{{ path('group_list') }}" class="btn btn-secondary me-2">Retour à la liste</a>
+                {{ form_row(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
+            </div>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+
+    <script>
+        document.getElementById('groupForm').addEventListener('submit', function(event) {
+            const contacts = document.querySelectorAll('input[name="group[contacts][]"]:checked');
+
+            if (contacts.length === 0) {
+                event.preventDefault();
+                alert('Vous devez sélectionner au moins un contact pour ce groupe.');
+            }
+        });
+    </script>
+{% endblock %}

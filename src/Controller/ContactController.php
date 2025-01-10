@@ -6,6 +6,7 @@ use App\Entity\Contact;
 use App\Entity\CustomField;
 use App\Form\ContactType;
 use App\Repository\ContactRepository;
+use App\Repository\GroupRepository;
 use Doctrine\ORM\EntityManagerInterface;  // Importation du EntityManagerInterface
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -45,16 +46,6 @@ class ContactController extends AbstractController
 
             $imageFile = $form->get('image')->getData();
 
-            $customFieldsData = $form->get('customFields')->getData();
-            foreach ($customFieldsData as $customFieldValue) {
-                $customField = new CustomField();
-                $customField->setValue($customFieldValue['value']);
-                $customField->setLabel($customFieldValue['label']);
-                $customField->setContact($contact);
-
-                $this->entityManager->persist($customField);
-            }
-
             if ($imageFile) {
                 $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = $slugger->slug($originalFilename);
@@ -71,6 +62,11 @@ class ContactController extends AbstractController
                 }
             }
 
+            $groups = $form->get('groups')->getData();
+            foreach ($groups as $group) {
+                $contact->addGroup($group);
+            }
+
             $this->entityManager->persist($contact);
             $this->entityManager->flush();
 
@@ -83,7 +79,7 @@ class ContactController extends AbstractController
     }
 
     #[Route('/contact/edit/{id}', name: 'contact_edit')]
-    public function editContact(int $id, Request $request, SluggerInterface $slugger, ContactRepository $contactRepository): Response
+    public function editContact(int $id, Request $request, SluggerInterface $slugger, ContactRepository $contactRepository, GroupRepository $groupRepository): Response
     {
         $contact = $contactRepository->find($id);
 
@@ -122,6 +118,27 @@ class ContactController extends AbstractController
                 }
             }
 
+            $groups = $form->get('groups')->getData();
+            foreach ($groups as $group) {
+                if (!$contact->getGroups()->contains($group)) {
+                    $contact->addGroup($group);
+                }
+            }
+            foreach ($contact->getGroups() as $existingGroup) {
+                if (!$groups->contains($existingGroup)) {
+                    $contact->removeGroup($existingGroup);
+                }
+            }
+
+            $this->entityManager->flush();
+
+            $emptyGroups = $groupRepository->findAll();
+            foreach ($emptyGroups as $group) {
+                if ($group->getContacts()->count() === 0) {
+                    $this->entityManager->remove($group);
+                }
+            }
+
             $this->entityManager->flush();
 
             $this->addFlash('success', 'Contact mis à jour avec succès.');
@@ -135,7 +152,7 @@ class ContactController extends AbstractController
     }
 
     #[Route('/contact/delete/{id}', name: 'contact_delete', methods: ['GET'])]
-    public function deleteContact(int $id, ContactRepository $contactRepository, EntityManagerInterface $entityManager): Response
+    public function deleteContact(int $id, ContactRepository $contactRepository, EntityManagerInterface $entityManager, GroupRepository $groupRepository): Response
     {
         $contact = $contactRepository->find($id);
 
@@ -151,6 +168,15 @@ class ContactController extends AbstractController
 
         $entityManager->remove($contact);
         $entityManager->flush();
+
+        $emptyGroups = $groupRepository->findAll();
+        foreach ($emptyGroups as $group) {
+            if ($group->getContacts()->count() === 0) {
+                $this->entityManager->remove($group);
+            }
+        }
+
+        $this->entityManager->flush();
 
         $this->addFlash('success', 'Contact supprimé avec succès.');
 

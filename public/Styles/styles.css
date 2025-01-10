@@ -140,3 +140,19 @@
 .contact-count {
     color: white;
 }
+
+.btn-check:checked + .btn-outline-secondary {
+    background-color: #ff94b4;
+    color: white;
+    border-color: #ff94b4;
+}
+
+.btn-outline-secondary {
+    background-color: white;
+    color: #ff94b4;
+    border-color: #ff94b4;
+}
+
+.btn-outline-secondary:hover {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}

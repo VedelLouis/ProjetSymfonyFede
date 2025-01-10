@@ -59,8 +59,20 @@
         </div>
 
         <div class="mb-3">
-            <h3>Champs personnalisés</h3>
-            {{ form_row(form.customFields) }}
+            <div class="mb-1">
+                {{ form_label(form.groups) }}
+            </div>
+            <div>
+                {% for choice in form.groups %}
+                    {{ form_widget(choice, {'attr': {'class': 'btn-check', 'id': choice.vars.id}}) }}
+                    <label class="btn btn-outline-secondary" for="{{ choice.vars.id }}">
+                        {{ choice.vars.label }}
+                    </label>
+                {% endfor %}
+            </div>
+            <div class="form-error">
+                {{ form_errors(form.groups) }}
+            </div>
         </div>
 
         <div class="mb-3">

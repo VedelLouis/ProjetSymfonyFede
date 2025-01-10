@@ -55,6 +55,24 @@
             {{ form_widget(form.image, { 'attr': {'class': 'form-control'} }) }}
             {{ form_errors(form.image) }}
         </div>
+
+        <div class="mb-3">
+            <div class="mb-1">
+                {{ form_label(form.groups) }}
+            </div>
+            <div>
+                {% for choice in form.groups %}
+                    {{ form_widget(choice, {'attr': {'class': 'btn-check', 'id': choice.vars.id}}) }}
+                    <label class="btn btn-outline-secondary" for="{{ choice.vars.id }}">
+                        {{ choice.vars.label }}
+                    </label>
+                {% endfor %}
+            </div>
+            <div class="form-error">
+                {{ form_errors(form.groups) }}
+            </div>
+        </div>
+
         <div class="mb-3">
             <div class="d-flex justify-start align-items-center mt-3 mb-4">
                 <a href="{{ path('contact_list') }}" class="btn btn-secondary me-2">Retour à la liste</a>
