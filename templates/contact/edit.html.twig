@@ -73,11 +73,60 @@
             </div>
         </div>
 
+        <div class="mb-2">
+            {{ form_label(form.customFields) }}
+        </div>
+        <div id="custom_fields" data-prototype="{{ form_widget(form.customFields.vars.prototype)|e }}">
+            {% for customField in form.customFields %}
+                <div class="custom-field-item mb-3 p-3 border rounded bg-light">
+                    {{ form_row(customField) }}
+                    <button type="button" class="btn btn-danger remove-custom-field mt-2">Supprimer</button>
+                </div>
+            {% endfor %}
+        </div>
+        <button type="button" id="add_custom_field" class="btn btn-info mt-3">Ajouter un champ personnalisé</button>
+
         <div class="mb-3">
             <div class="d-flex justify-start align-items-center mt-3 mb-4">
                 <a href="{{ path('contact_list') }}" class="btn btn-secondary me-2">Retour à la liste</a>
                 {{ form_row(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
             </div>
         </div>
+        {{ form_end(form) }}
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const customFieldsContainer = document.getElementById('custom_fields');
+            const addFieldButton = document.getElementById('add_custom_field');
+
+            addFieldButton.addEventListener('click', () => {
+                const prototype = customFieldsContainer.dataset.prototype;
+                const index = customFieldsContainer.children.length;
+
+                const newFieldHtml = prototype.replace(/__name__/g, index);
+
+                const fieldContainer = document.createElement('div');
+                fieldContainer.classList.add('custom-field-item', 'mb-3', 'p-3', 'border', 'rounded', 'bg-light');
+                fieldContainer.innerHTML = newFieldHtml;
+
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.classList.add('btn', 'btn-warning', 'remove-custom-field', 'mt-2');
+                removeButton.textContent = 'Retirer le champ';
+                removeButton.addEventListener('click', () => {
+                    fieldContainer.remove();
+                });
+
+                fieldContainer.appendChild(removeButton);
+                customFieldsContainer.appendChild(fieldContainer);
+            });
+
+            document.querySelectorAll('.remove-custom-field').forEach(button => {
+                button.addEventListener('click', () => {
+                    button.parentElement.remove();
+                });
+            });
+        });
+    </script>
 {% endblock %}

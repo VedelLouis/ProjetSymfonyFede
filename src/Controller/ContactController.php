@@ -67,6 +67,11 @@ class ContactController extends AbstractController
                 $contact->addGroup($group);
             }
 
+            $customFields = $contact->getCustomFields();
+            foreach ($customFields as $customField) {
+                $this->entityManager->persist($customField);
+            }
+
             $this->entityManager->persist($contact);
             $this->entityManager->flush();
 
@@ -118,6 +123,16 @@ class ContactController extends AbstractController
                 }
             }
 
+            $customFields = $contact->getCustomFields();
+
+            foreach ($customFields as $customField) {
+                if ($customField->getValue() === 'condition de suppression') {
+                    $this->entityManager->remove($customField);
+                }
+            }
+
+            $this->entityManager->flush();
+
             $groups = $form->get('groups')->getData();
             foreach ($groups as $group) {
                 if (!$contact->getGroups()->contains($group)) {
@@ -129,8 +144,6 @@ class ContactController extends AbstractController
                     $contact->removeGroup($existingGroup);
                 }
             }
-
-            $this->entityManager->flush();
 
             $emptyGroups = $groupRepository->findAll();
             foreach ($emptyGroups as $group) {

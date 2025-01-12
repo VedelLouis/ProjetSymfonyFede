@@ -59,6 +59,14 @@ class ContactType extends AbstractType
                 'multiple' => true,
                 'expanded' => true,
             ])
+            ->add('customFields', CollectionType::class, [
+                'entry_type' => CustomFieldType::class,
+                'entry_options' => ['label' => false],
+                'allow_add' => true,
+                'allow_delete' => true,
+                'by_reference' => false,
+                'label' => 'Champs personnalisés',
+            ])
             ->add('save', SubmitType::class, [
                 'label' => $options['submit_label'],
             ]);

@@ -156,3 +156,8 @@
 .btn-outline-secondary:hover {
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
+
+[id^="contact_customFields_"] label {
+    margin-right: 10px;
+    margin-bottom: 10px;
+}

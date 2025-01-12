@@ -15,12 +15,14 @@ class CustomFieldType extends AbstractType
     {
         $builder
             ->add('label', TextType::class, [
-                'label' => 'Libelle',
+                'label' => 'Label',
                 'required' => true,
+                'attr' => ['placeholder' => 'Nom du champ'],
             ])
             ->add('value', TextType::class, [
                 'label' => 'Valeur',
                 'required' => true,
+                'attr' => ['placeholder' => 'Valeur du champ'],
             ]);
     }
 

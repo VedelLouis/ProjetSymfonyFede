@@ -27,21 +27,32 @@
                                 </strong><br>
                                 <span class="contact-phone">Téléphone : {{ contact.phoneNumber }}</span><br>
                                 <span class="contact-email">Email : {{ contact.email }}</span>
+
+                                {% if contact.customFields is not empty %}
+                                    <div class="custom-fields">
+                                        {% for customField in contact.customFields %}
+                                            <span class="contact-custom">{{ customField.label }} : {{ customField.value }}</span>
+                                            <br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
                             </div>
                         </div>
                         <div>
                             <div class="contact-groups">
+                                <h5>Groupes :</h5>
                                 {% if contact.groups is not empty %}
-                                    <h5>Groupes : </h5>
                                     <div class="mb-2">
                                         {% for group in contact.groups %}
                                             <span class="badge bg-secondary text-light">{{ group.name }}</span>
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                    <span class="badge bg-secondary">Aucun groupe</span>
+                                    <br>
                                 {% endif %}
                             </div>
+
                             <a href="{{ path('contact_edit', { id: contact.id }) }}" class="btn btn-primary btn-lg">Modifier</a>
                             <a href="{{ path('contact_delete', { id: contact.id }) }}" class="btn btn-danger btn-lg" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce contact ?');">Supprimer</a>
                         </div>
@@ -65,12 +76,14 @@
                 const contactPhone = item.querySelector('.contact-phone').textContent.toLowerCase();
                 const contactEmail = item.querySelector('.contact-email').textContent.toLowerCase();
                 const contactGroup = item.querySelector('.contact-groups').textContent.toLowerCase();
+                const contactFields = item.querySelector('.custom-fields')?.textContent.toLowerCase() || '';
 
                 if (
                     contactName.includes(searchTerm) ||
                     contactPhone.includes(searchTerm) ||
                     contactEmail.includes(searchTerm) ||
-                    contactGroup.includes(searchTerm)
+                    contactGroup.includes(searchTerm) ||
+                    contactFields.includes(searchTerm)
                 ) {
                     item.style.display = '';
                 } else {

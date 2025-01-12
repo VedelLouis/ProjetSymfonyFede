@@ -39,7 +39,7 @@ class Contact
     /**
      * @var Collection<int, CustomField>
      */
-    #[ORM\OneToMany(targetEntity: CustomField::class, mappedBy: 'Contact')]
+    #[ORM\OneToMany(targetEntity: CustomField::class, mappedBy: 'Contact', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $customFields;
 
     public function __construct()
